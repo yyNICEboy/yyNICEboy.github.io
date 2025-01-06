@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>论文自检任务清单</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .checkbox { display: flex; align-items: center; }
+    .checkbox input { margin-right: 10px; }
+    .completed { text-decoration: line-through; color: gray; }
+    #badges span { margin-right: 10px; background-color: #e0e0e0; padding: 5px 10px; border-radius: 5px; }
+    #progress-bar {
+      width: 100%;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    #progress {
+      width: 0%;
+      height: 20px;
+      background-color: #76c7c0;
+      border-radius: 5px;
+      text-align: center;
+      color: white;
+      line-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>论文自检任务清单</h1>
+<h2>任务总览</h2>
+<ul>
+<li><strong>总积分</strong>：<span id="total-points">0</span></li>
+<li><strong>已解锁徽章</strong>：<span id="badges">无</span></li>
+</ul>
+<h2>任务列表</h2>
+<h3>📄 标题与封面</h3>
+<ul>
+<li id="task-title"><input type="checkbox" id="cbx_0"><label for="cbx_0"></label><strong>检查标题</strong>：确保标题简洁明了。 <!-- points:10 --></li>
+<li id="task-cover"><input type="checkbox" id="cbx_1"><label for="cbx_1"></label><strong>封面格式</strong>：封面符合要求的格式。 <!-- points:10 --></li>
+<li><strong>徽章奖励</strong>：完成所有任务可获得“格式达人”徽章。</li>
+</ul>
+<h3>📝 摘要</h3>
+<ul>
+<li id="task-abstract-content"><input type="checkbox" id="cbx_2"><label for="cbx_2"></label><strong>内容完整</strong>：摘要包含研究目的、方法、结果和结论。 <!-- points:15 --></li>
+<li id="task-abstract-length"><input type="checkbox" id="cbx_3"><label for="cbx_3"></label><strong>字数符合</strong>：摘要字数在规定范围内。 <!-- points:10 --></li>
+<li><strong>徽章奖励</strong>：完成所有任务可获得“摘要高手”徽章。</li>
+</ul>
+<!-- 添加更多任务部分 -->
+  
+  <div id="progress-bar">
+    <div id="progress">0%</div>
+  </div>
+  
+  <script>
+    // 获取所有复选框
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const totalPointsEl = document.getElementById('total-points');
+    const badgesEl = document.getElementById('badges');
+    const progressEl = document.getElementById('progress');
+
+    // 积分和徽章数据
+    const badges = {
+      '格式达人': { required: 20 },
+      '摘要高手': { required: 25 },
+      // 添加更多徽章
+    };
+    let totalPoints = 0;
+    let unlockedBadges = [];
+
+    // 初始化：加载数据
+    window.onload = () => {
+      // 加载总积分
+      if (localStorage.getItem('totalPoints')) {
+        totalPoints = parseInt(localStorage.getItem('totalPoints'));
+        totalPointsEl.textContent = totalPoints;
+      }
+
+      // 加载已解锁的徽章
+      if (localStorage.getItem('unlockedBadges')) {
+        unlockedBadges = JSON.parse(localStorage.getItem('unlockedBadges'));
+        updateBadges();
+      }
+
+      // 初始化复选框状态
+      checkboxes.forEach(cb => {
+        const taskId = cb.parentElement.getAttribute('id');
+        if (localStorage.getItem(taskId) === 'true') {
+          cb.checked = true;
+          addPoints(parseInt(cb.getAttribute('data-points')));
+          markCompleted(cb);
+        }
+        // 添加事件监听
+        cb.addEventListener('change', () => {
+          if (cb.checked) {
+            addPoints(parseInt(cb.getAttribute('data-points')));
+            markCompleted(cb);
+            localStorage.setItem(taskId, 'true');
+          } else {
+            subtractPoints(parseInt(cb.getAttribute('data-points')));
+            unmarkCompleted(cb);
+            localStorage.setItem(taskId, 'false');
+          }
+          checkBadges();
+          saveData();
+          updateProgress();
+        });
+      });
+
+      updateProgress();
+    };
+
+    function addPoints(points) {
+      totalPoints += points;
+      updatePoints();
+    }
+
+    function subtractPoints(points) {
+      totalPoints -= points;
+      if (totalPoints < 0) totalPoints = 0;
+      updatePoints();
+    }
+
+    function updatePoints() {
+      totalPointsEl.textContent = totalPoints;
+    }
+
+    function markCompleted(checkbox) {
+      checkbox.parentElement.classList.add('completed');
+    }
+
+    function unmarkCompleted(checkbox) {
+      checkbox.parentElement.classList.remove('completed');
+    }
+
+    function checkBadges() {
+      for (const badge in badges) {
+        if (totalPoints >= badges[badge].required && !unlockedBadges.includes(badge)) {
+          unlockedBadges.push(badge);
+          updateBadges();
+        }
+      }
+    }
+
+    function updateBadges() {
+      badgesEl.innerHTML = unlockedBadges.map(b => `<span>${b}</span>`).join('');
+    }
+
+    function saveData() {
+      localStorage.setItem('totalPoints', totalPoints);
+      localStorage.setItem('unlockedBadges', JSON.stringify(unlockedBadges));
+    }
+
+    function updateProgress() {
+      const totalTasks = checkboxes.length;
+      const completedTasks = document.querySelectorAll('input[type="checkbox"]:checked').length;
+      const progressPercent = Math.round((completedTasks / totalTasks) * 100);
+      progressEl.style.width = `${progressPercent}%`;
+      progressEl.textContent = `${progressPercent}%`;
+    }
+
+    // 读取积分和徽章数据从任务列表
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      const pointsMatch = cb.parentElement.textContent.match(/<!--\s*points:(\d+)\s*-->/);
+      if (pointsMatch) {
+        cb.setAttribute('data-points', pointsMatch[1]);
+      }
+    });
+  </script>
+</body>
+</html>
