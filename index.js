@@ -52,9 +52,43 @@ const levels = [
   { level: 10, required: 800 },
 ];
 
-let currentLevel = 1;
-let totalPoints = 0;
-let unlockedBadges = [];
+// 新增：状态管理代码
+const state = {
+  points: 0,
+  checkedTasks: new Set(),
+};
+
+// 新增：从 localStorage 加载状态
+function loadState() {
+  const savedState = localStorage.getItem('selfcheckState');
+  if (savedState) {
+    const parsed = JSON.parse(savedState);
+    state.points = parsed.points || 0;
+    state.checkedTasks = new Set(parsed.checkedTasks || []);
+  }
+}
+
+// 新增：保存状态到 localStorage
+function saveState() {
+  localStorage.setItem('selfcheckState', JSON.stringify({
+    points: state.points,
+    checkedTasks: Array.from(state.checkedTasks)
+  }));
+}
+
+// 新增：更新积分的函数
+function updatePoints(taskId, isChecked, points) {
+  if (isChecked && !state.checkedTasks.has(taskId)) {
+    state.points += points;
+    state.checkedTasks.add(taskId);
+  } else if (!isChecked && state.checkedTasks.has(taskId)) {
+    state.points -= points;
+    state.checkedTasks.delete(taskId);
+  }
+  document.getElementById('total-points').textContent = state.points;
+  saveState();
+  updateBadgesAndLevel();
+}
 
 // 创建一个简单的 HTML 页面
 const htmlTemplate = `
@@ -287,16 +321,19 @@ const htmlTemplate = `
         }
       });
 
-      // 加载总积分
-      if (localStorage.getItem('totalPoints')) {
-        totalPoints = parseInt(localStorage.getItem('totalPoints'));
-        if (!isNaN(totalPoints)) {
-          totalPointsEl.textContent = totalPoints;
-        } else {
-          totalPoints = 0;
-          totalPointsEl.textContent = totalPoints;
-        }
-      }
+      // // 加载总积分
+      // if (localStorage.getItem('totalPoints')) {
+      //   totalPoints = parseInt(localStorage.getItem('totalPoints'));
+      //   if (!isNaN(totalPoints)) {
+      //     totalPointsEl.textContent = totalPoints;
+      //   } else {
+      //     totalPoints = 0;
+      //     totalPointsEl.textContent = totalPoints;
+      //   }
+      // }
+
+      totalPoints = 0;
+      totalPointsEl.textContent = totalPoints;
 
       // 加载已解锁的徽章
       if (localStorage.getItem('unlockedBadges')) {

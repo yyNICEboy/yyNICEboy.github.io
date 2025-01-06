@@ -450,16 +450,19 @@
         }
       });
 
-      // 加载总积分
-      if (localStorage.getItem('totalPoints')) {
-        totalPoints = parseInt(localStorage.getItem('totalPoints'));
-        if (!isNaN(totalPoints)) {
-          totalPointsEl.textContent = totalPoints;
-        } else {
-          totalPoints = 0;
-          totalPointsEl.textContent = totalPoints;
-        }
-      }
+      // // 加载总积分
+      // if (localStorage.getItem('totalPoints')) {
+      //   totalPoints = parseInt(localStorage.getItem('totalPoints'));
+      //   if (!isNaN(totalPoints)) {
+      //     totalPointsEl.textContent = totalPoints;
+      //   } else {
+      //     totalPoints = 0;
+      //     totalPointsEl.textContent = totalPoints;
+      //   }
+      // }
+
+      totalPoints = 0;
+      totalPointsEl.textContent = totalPoints;
 
       // 加载已解锁的徽章
       if (localStorage.getItem('unlockedBadges')) {
@@ -613,22 +616,6 @@
       levelEl.textContent = currentLevel;
     }
 
-    // function unlockLevel(level) {
-    //   // 显示等级提升弹窗
-    //   Swal.fire({
-    //     title: '升级啦！',
-    //     text: `您已提升到第${level}级！继续努力！`,
-    //     icon: 'info',
-    //     confirmButtonText: '太棒了！'
-    //   });
-
-    //   // 触发庆祝动画
-    //   confetti({
-    //     particleCount: 300,
-    //     spread: 90,
-    //     origin: { y: 0.6 }
-    //   });
-    // }
 
     function saveData() {
       localStorage.setItem('totalPoints', totalPoints);
